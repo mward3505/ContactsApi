@@ -1,3 +1,6 @@
+using ContactsApi.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+// Add Datatabase context
+builder.Services.AddDbContext<ContactsDbContext>(options =>
+    options.UseSqlite("Data Source=contacts.db"));
 
 var app = builder.Build();
 
