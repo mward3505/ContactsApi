@@ -17,9 +17,36 @@ public class ContactsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Contact>>> GetAllContacts()
+    public async Task<ActionResult<List<Contact>>> GetAllContacts(
+        [FromQuery] string? search,
+        [FromQuery] string? sortBy,
+        [FromQuery] string? order)
     {
-        return Ok(await _db.Contacts.ToListAsync());
+        IQueryable<Contact> query = _db.Contacts;
+
+        // Filtering
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(c =>
+                c.FirstName.Contains(search) ||
+                c.LastName.Contains(search) ||
+                c.Email.Contains(search));
+        }
+
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            bool ascending = string.Equals(order, "asc", StringComparison.OrdinalIgnoreCase);
+
+            query = sortBy.ToLower() switch
+            {
+                "firstname" => ascending ? query.OrderBy(c => c.FirstName) : query.OrderByDescending(c => c.FirstName),
+                "lastname" => ascending ? query.OrderBy(c => c.LastName) : query.OrderByDescending(c => c.LastName),
+                "email" => ascending ? query.OrderBy(c => c.Email) : query.OrderByDescending(c => c.Email),
+                _ => query // fallback to no srort if invalid field
+            };
+        }
+
+        return Ok(await query.ToListAsync());
     }
 
     [HttpGet("{id}")]
