@@ -20,7 +20,9 @@ public class ContactsController : ControllerBase
     public async Task<ActionResult<List<Contact>>> GetAllContacts(
         [FromQuery] string? search,
         [FromQuery] string? sortBy,
-        [FromQuery] string? order)
+        [FromQuery] string? order,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
         IQueryable<Contact> query = _db.Contacts;
 
@@ -42,9 +44,13 @@ public class ContactsController : ControllerBase
                 "firstname" => ascending ? query.OrderBy(c => c.FirstName) : query.OrderByDescending(c => c.FirstName),
                 "lastname" => ascending ? query.OrderBy(c => c.LastName) : query.OrderByDescending(c => c.LastName),
                 "email" => ascending ? query.OrderBy(c => c.Email) : query.OrderByDescending(c => c.Email),
-                _ => query // fallback to no srort if invalid field
+                _ => query // fallback to no sort if invalid field
             };
         }
+
+        query = query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize);
 
         return Ok(await query.ToListAsync());
     }
